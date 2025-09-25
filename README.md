@@ -21,20 +21,3 @@ Prerequisites
 Python 3.6 or higher
 
 Operating System: Windows, macOS, or Linux
-
-Installation
-Download the script file
-
-Make it executable (Linux/macOS):
-
-bash
-chmod +x network_diagnostics.py
-Usage
-Option 1: Run directly
-
-bash
-python3 network_diagnostics.py
-Option 2: Run as executable (Linux/macOS)
-
-bash
-./network_diagnostics.py
