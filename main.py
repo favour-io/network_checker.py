@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Professional Network Diagnostics Tool
 Author: Eniola Favour
