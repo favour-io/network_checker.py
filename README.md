@@ -1,17 +1,40 @@
-🔍 Interactive Network Checker
+🔍 Network Diagnostics Tool
 ========================================
-Enter the websites or IP addresses you want to test.
-Separate multiple sites with commas.
-Example: google.com, 8.8.8.8, microsoft.com
+A comprehensive Python-based network diagnostics tool for network troubleshooting.
 
-Which sites would you like to test? : google.com, github.com, 1.1.1.1
+📋 Overview
+This tool provides a user-friendly menu-driven interface for performing various network diagnostics tasks, including quick health checks, custom website testing, and access to troubleshooting tips.
 
-Testing 3 site(s): google.com, github.com, 1.1.1.1
-Starting connectivity tests...
+✨ Features
+🔄 Quick Network Diagnosis: Automated health check of major services (Google DNS, Google.com, Cloudflare)
 
-Testing google.com... ✅ SUCCESS
-Testing github.com... ✅ SUCCESS
-Testing 1.1.1.1... ✅ SUCCESS
+🎯 Custom Website Testing: Test specific websites or IP addresses with detailed results
 
-📊 Results: 3/3 tests passed
-🎉 All sites are reachable! Network connectivity is good.
+💡 Troubleshooting Tips: Common network troubleshooting advice
+
+🛠️ Professional Interface: Clean, intuitive menu system with visual feedback
+
+🔧 Cross-Platform Support: Works on Windows, macOS, and Linux
+
+🚀 Quick Start
+Prerequisites
+Python 3.6 or higher
+
+Operating System: Windows, macOS, or Linux
+
+Installation
+Download the script file
+
+Make it executable (Linux/macOS):
+
+bash
+chmod +x network_diagnostics.py
+Usage
+Option 1: Run directly
+
+bash
+python3 network_diagnostics.py
+Option 2: Run as executable (Linux/macOS)
+
+bash
+./network_diagnostics.py
