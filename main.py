@@ -1,30 +1,37 @@
-#!/usr/bin/env python
+
+ #!/usr/bin/env python3
 """
 Professional Network Diagnostics Tool
 Author: Eniola Favour
-Description: Network troubleshooting for IT support
+Description: Network Connectivity Checker, an IT support tool with menu system
 """
 
 import subprocess
 import platform
 import socket
 import re
-from datetime import datetime
+import time
+import os
+
+def clear_screen():
+    """Clear the terminal screen"""
+    os.system('cls' if platform.system() == 'Windows' else 'clear')
+
+def show_banner():
+    """Display tool banner"""
+    print("🛠️  Professional Network Diagnostics Tool")
+    print("=" * 50)
 
 def validate_hostname(hostname):
     """Validate if hostname format is reasonable"""
     if not hostname or len(hostname) > 255:
         return False
-    # Basic format check for domains and IPs
     if re.match(r'^[a-zA-Z0-9.-]+$', hostname):
         return True
     return False
 
 def ping_host(hostname, count=4, timeout=5):
-    """
-    Professional ping with detailed results
-    Returns: (success, response_time, packet_loss)
-    """
+    """Professional ping with detailed results"""
     param = '-n' if platform.system().lower() == 'windows' else '-c'
     command = ['ping', param, str(count), hostname]
     
@@ -32,12 +39,10 @@ def ping_host(hostname, count=4, timeout=5):
         result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
         
         if result.returncode == 0:
-            # Extract response time from ping output
             time_match = re.search(r'time=([0-9.]+)\s*ms', result.stdout)
             response_time = float(time_match.group(1)) if time_match else 0
             return True, response_time, 0
         else:
-            # Calculate packet loss
             loss_match = re.search(r'([0-9.]+)%\s+packet\s+loss', result.stdout)
             packet_loss = float(loss_match.group(1)) if loss_match else 100
             return False, 0, packet_loss
@@ -55,132 +60,142 @@ def dns_lookup(hostname):
     except socket.gaierror:
         return False, "DNS resolution failed"
 
-def check_common_services():
-    """Check essential internet services to determine actual connectivity"""
-    critical_services = [
-        "google.com",  # Most reliable
-        "cloudflare.com",  # DNS service
-        "8.8.8.8",  # Google DNS (IP, so no DNS dependency)
+def run_quick_diagnosis():
+    """Quick automated network health check"""
+    print("\n🚀 Running Quick Network Diagnosis...")
+    print("-" * 40)
+    
+    test_services = [
+        ("Google DNS (8.8.8.8)", "8.8.8.8"),  # Bypass DNS
+        ("Google.com", "google.com"),         # Test DNS + connectivity
+        ("Cloudflare", "cloudflare.com")      # Another reliable service
     ]
-    return critical_services
-
-def diagnose_connectivity(results):
-    """
-    Professional diagnosis based on pattern analysis
-    """
-    successful_checks = sum(1 for success, _, _ in results.values() if success)
-    total_checks = len(results)
     
-    print("\n" + "="*60)
-    print("🔧 NETWORK DIAGNOSIS REPORT")
-    print("="*60)
+    all_successful = True
+    dns_working = True
     
-    # Analyze patterns for professional diagnosis
-    dns_failures = sum(1 for host, (success, _, _) in results.items() 
-                      if not success and "DNS resolution" in str(host))
-    
-    ip_success = any(success for host, (success, _, _) in results.items() 
-                    if re.match(r'^\d+\.\d+\.\d+\.\d+$', host))
-    domain_failures = sum(1 for host, (success, _, _) in results.items() 
-                         if not success and not re.match(r'^\d+\.\d+\.\d+\.\d+$', host))
-    
-    if successful_checks == total_checks:
-        print("✅ NETWORK STATUS: Excellent - All systems operational")
-        print("   Your internet connection is working perfectly.")
+    for service_name, address in test_services:
+        print(f"Testing {service_name}...", end=" ")
         
-    elif ip_success and domain_failures > 0:
-        print("⚠️  NETWORK STATUS: DNS Issues Detected")
-        print("   • Internet connectivity: WORKING")
-        print("   • DNS resolution: FAILING")
-        print("   • Action: Check DNS settings or try using 8.8.8.8/1.1.1.1")
-        
-    elif successful_checks > 0:
-        print("⚠️  NETWORK STATUS: Partial Connectivity")
-        print("   • Some services are reachable, others are not")
-        print("   • Possible issues: Firewall, specific service outages")
-        print("   • Action: Check if the problem is site-specific")
-        
+        # For IP addresses, skip DNS check
+        if re.match(r'^\d+\.\d+\.\d+\.\d+$', address):
+            success, response_time, loss = ping_host(address)
+            if success:
+                print(f"✅ {response_time:.1f}ms")
+            else:
+                print("❌ FAILED")
+                all_successful = False
+        else:
+            # For domains, check DNS first
+            dns_ok, ip = dns_lookup(address)
+            if dns_ok:
+                success, response_time, loss = ping_host(address)
+                if success:
+                    print(f"✅ {response_time:.1f}ms (DNS: {ip})")
+                else:
+                    print("❌ PING FAILED")
+                    all_successful = False
+            else:
+                print("❌ DNS FAILED")
+                dns_working = False
+                all_successful = False
+    
+    # Provide intelligent diagnosis
+    print("\n" + "=" * 50)
+    print("🔧 DIAGNOSIS RESULTS:")
+    print("=" * 50)
+    
+    if all_successful:
+        print("✅ NETWORK STATUS: Excellent")
+        print("   All systems operational - no issues detected")
+    elif not dns_working:
+        print("⚠️  NETWORK STATUS: DNS Issues")
+        print("   Internet connectivity is working but DNS is failing")
+        print("   Try using Google DNS (8.8.8.8) or Cloudflare (1.1.1.1)")
     else:
-        # Critical analysis when everything fails
-        print("🔴 NETWORK STATUS: No Connectivity")
-        print("   • Check physical connections (Ethernet/Wi-Fi)")
-        print("   • Restart router/modem")
-        print("   • Contact ISP if problem persists")
-    
-    print("="*60)
+        print("🔴 NETWORK STATUS: Connectivity Issues")
+        print("   Check your router, cables, or contact your ISP")
 
-def main():
-    print("🛠️  Professional Network Diagnostics Tool")
-    print("="*50)
+def run_custom_test():
+    """Test specific websites entered by user"""
+    print("\n🎯 Custom Website Testing")
+    print("-" * 40)
     
-    # Always test critical services first for baseline
-    print("Phase 1: Testing critical internet services...")
-    critical_services = check_common_services()
-    
-    results = {}
-    
-    for service in critical_services:
-        if not validate_hostname(service):
+    while True:
+        user_input = input("\nEnter website to test (or 'back' to return): ").strip()
+        
+        if user_input.lower() == 'back':
+            break
+            
+        if not validate_hostname(user_input):
+            print("❌ Invalid hostname format")
             continue
             
-        print(f"\nTesting: {service}")
+        print(f"\nTesting: {user_input}")
+        print("-" * 25)
         
-        # DNS check first
-        dns_success, dns_info = dns_lookup(service)
-        if dns_success:
-            print(f"  DNS: ✅ Resolved to {dns_info}")
+        # Check if it's an IP or domain
+        if re.match(r'^\d+\.\d+\.\d+\.\d+$', user_input):
+            print("Type: IP Address (DNS bypassed)")
+            success, response_time, loss = ping_host(user_input)
+            if success:
+                print(f"Status: ✅ Reachable ({response_time:.1f}ms)")
+            else:
+                print(f"Status: ❌ Unreachable ({loss}% packet loss)")
         else:
-            print(f"  DNS: ❌ Failed")
-            results[service] = (False, 0, "DNS resolution failed")
-            continue
+            # Domain name - check DNS first
+            dns_ok, ip = dns_lookup(user_input)
+            if dns_ok:
+                print(f"DNS: ✅ Resolved to {ip}")
+                success, response_time, loss = ping_host(user_input)
+                if success:
+                    print(f"Ping: ✅ Reachable ({response_time:.1f}ms)")
+                else:
+                    print(f"Ping: ❌ Unreachable ({loss}% packet loss)")
+            else:
+                print("DNS: ❌ Resolution failed - probably an inactive or misspelled site")
+                print("Ping: Skipped (DNS failure)")
+
+def show_network_tips():
+    """Display common troubleshooting tips"""
+    print("\n💡 Network Troubleshooting Tips")
+    print("=" * 50)
+    print("1. Restart your router/modem")
+    print("2. Check physical cables and Wi-Fi connection")
+    print("3. Try using Google DNS: 8.8.8.8 and 8.8.4.4")
+    print("4. Disable VPN or proxy temporarily")
+    print("5. Check firewall settings")
+    print("6. Update network drivers")
+    print("7. Contact your ISP if issues persist")
+    input("\nPress Enter to return to menu...")
+
+def main_menu():
+    """Main interactive menu system"""
+    while True:
+        clear_screen()
+        show_banner()
         
-        # Ping check
-        success, response_time, packet_loss = ping_host(service)
-        results[service] = (success, response_time, packet_loss)
+        print("\n📋 Main Menu:")
+        print("1. 🔄 Quick Network Diagnosis")
+        print("2. 🎯 Test Specific Website")
+        print("3. 💡 Troubleshooting Tips")
+        print("4. ❌ Exit Tool")
         
-        if success:
-            print(f"  Ping: ✅ {response_time:.1f}ms (0% packet loss)")
+        choice = input("\nSelect option (1-4): ").strip()
+        
+        if choice == '1':
+            run_quick_diagnosis()
+            input("\nPress Enter to continue...")
+        elif choice == '2':
+            run_custom_test()
+        elif choice == '3':
+            show_network_tips()
+        elif choice == '4':
+            print("\n👋 Thank you for using the Network Diagnostics Tool!")
+            break
         else:
-            print(f"  Ping: ❌ Failed ({packet_loss}% packet loss)")
-    
-    # Now test user-specific sites
-    print("\n" + "-"*50)
-    print("Phase 2: Testing your specific sites...")
-    
-    user_input = input("Enter websites to test (comma-separated, or press Enter to skip): ").strip()
-    
-    if user_input:
-        user_sites = [site.strip() for site in user_input.split(',') if site.strip()]
-        
-        for site in user_sites:
-            if not validate_hostname(site):
-                print(f"  {site}: ⚠️ Invalid format - skipping")
-                continue
-                
-            dns_success, dns_info = dns_lookup(site)
-            success, response_time, packet_loss = ping_host(site)
-            results[site] = (success, response_time, packet_loss)
-            
-            status = "✅" if success else "❌"
-            dns_status = "Resolved" if dns_success else "Failed"
-            print(f"  {site}: {status} Ping: {response_time:.1f}ms, DNS: {dns_status}")
-    
-    # Professional diagnosis
-    diagnose_connectivity(results)
-    
-    # Summary table
-    print("\n📊 DETAILED RESULTS:")
-    print("-"*60)
-    print(f"{'Host':<20} {'Status':<10} {'Response Time':<15} {'DNS'}") 
-    print("-"*60)
-    
-    for host, (success, response_time, packet_loss) in results.items():
-        status = "✅ UP" if success else "❌ DOWN"
-        time_str = f"{response_time:.1f}ms" if success else "N/A"
-        dns_success, dns_info = dns_lookup(host)
-        dns_str = "✅" if dns_success else "❌"
-        
-        print(f"{host:<20} {status:<10} {time_str:<15} {dns_str}")
+            print("❌ Invalid option. Please try again.")
+            time.sleep(1)
 
 if __name__ == "__main__":
-    main()
+    main_menu()
